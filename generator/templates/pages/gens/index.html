@@ -1,0 +1,384 @@
+{% extends "layouts/app.html" %}
+{% block title %}{{ file['title'][:14] }}{% endblock %}
+{% block content %}
+    {% include "partials/navbar.html" %}
+    <section class="container mt-5">
+        <div class="row justify-content-between mb-5">
+            <div class="col-10">
+                <a href="{{ url_for('file.index', name=region.name) }}" class="btn btn-dark btn-sm"><i
+                        class="fas fa-arrow-left"></i>
+                    Back to {{ region.abbr }} files</a>
+            </div>
+            {#<div class="col-2">
+                <a href="{{ url_for('file.create_file', name=region.name) }}" class="btn btn-dark btn-sm">Add File <i
+                        class="fas fa-plus"></i></a>
+            </div>#}
+        </div>
+        <div class="row">
+            <div class="col-8">
+                <div class="card" style="">
+                    <div class="card-body">
+                        <div class="card-title h5">
+                            <div class="row">
+                                <div class="col">
+                                    Original File: <i class="fas fa-file-excel"></i> {{ file.title }} &nbsp;
+                                    {% if file.status == -1 %}
+                                        <span class="badge bg-warning">Undone</span>
+                                    {% elif file.status == 0 %}
+                                        <span class="badge bg-primary">Ongoing</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% endif %}
+                                </div>
+                                {% if file.status == -1 %}
+                                    <div class="col-3">
+                                        <a href="{{ url_for('file.change_status', ID=file.id) }}" type="button"
+                                           class="btn btn-warning"><i class="fas fa-clock"></i> Start work
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+
+                        </div>
+                        <hr>
+                        <div class="row justify-content-between">
+                            <div class="col">
+                                {{ file.created_on.strftime('%a %d %b, %Y') }} By {{ user.username }}
+                            </div>
+                            <div class="col-4">
+                                <a href="" class="btn btn-danger btn-sm disabled">
+                                    Remove <i class="fas fa-trash"></i>
+                                </a>
+                                <a href="{{ url_for('file.download_file', ID=file['id']) }}"
+                                   class="btn btn-success btn-sm">
+                                    Download <i class="fas fa-download"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                {% if file.status > -1 %}
+                    <div class="card" style="">
+                        <div class="card-body">
+                            <h5 class="card-title">Cleaned File:
+                                {% if cleaned is not none %}
+                                    <i class="fas fa-file-excel"></i> {{ cleaned.title }} </h5>
+                                {% else %}
+                                    <form enctype="multipart/form-data"
+                                          action="{{ url_for('file.add_cleaned_file', file_id=file.id) }}"
+                                          method="post">
+                                        <div class="input-group mb-3">
+                                            <input class="form-control" type="file" name="cleaned_file">
+                                            <button class="btn btn-outline-secondary disabled" type="submit">
+                                                Upload File
+                                            </button>
+                                        </div>
+                                    </form>
+                                {% endif %}
+
+                            <hr>
+                            <div class="row justify-content-between">
+                                <div class="col">
+                                    {% if cleaned is not none %}
+                                        <div>
+                                            {{ cleaned.created_on.strftime('%a %d %b, %Y') }} By {{ cleaned.username }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-7">
+                                    <a href="{{ url_for('file.remove_cleaned_file', ID=(cleaned.id if cleaned else 0)) }}"
+                                       class="btn btn-danger btn-sm {% if cleaned is none %}disabled{% endif %}">
+                                        Remove File <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                    <a href="{{ url_for('file.download_cleaned_file', ID=(cleaned.id if cleaned else 0)) }}"
+                                       class="btn btn-success btn-sm {% if cleaned is none %}disabled{% endif %}">
+                                        Download File <i class="fas fa-download"></i>
+                                    </a>
+                                    <a href="{{ url_for('file.generate_csv', cleaned_id=(cleaned.id if cleaned else 0)) }}"
+                                       class="btn btn-primary btn-sm {% if cleaned is none %}disabled{% endif %}">
+                                        Generate CSVs <i class="fas fa-recycle"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                {% else %}
+                    <div></div>
+                {% endif %}
+                <div class="row">
+                    <div class="col">
+                        <div class="card" style="">
+                            <h4 class="card-header bg-success text-white">
+                                Generated files
+                            </h4>
+                            <ul class="list-group list-group-flush">
+                                {% if generated %}
+                                    {% for gen in generated %}
+                                        <li class="list-group-item">
+                                            <div class="row justify-content-between">
+                                                <div class="col h5">
+                                                    {{ gen }}
+                                                </div>
+                                                <div class="col-2">
+                                                    <a href="{{ url_for('file.download_generated_file', ID=cleaned.id, filename=gen) }}" class="btn btn-success btn-sm">Download</a>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="row">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Change history</h5>
+                            <hr>
+                            <div class="row d-flex justify-content-center ">
+                                <div class="col-md-6">
+                                    <div class="vertical-timeline vertical-timeline--animate vertical-timeline--one-column">
+                                        <div class="vertical-timeline-item vertical-timeline-element">
+                                            <div><span class="vertical-timeline-element-icon bounce-in"> <i
+                                                    class="badge badge-dot badge-dot-xl badge-success"></i> </span>
+                                                <div class="vertical-timeline-element-content bounce-in">
+                                                    <h4 class="timeline-title text-warning">File created</h4>
+                                                    <p>By {{ user.username }}</p>
+                                                    <span class="vertical-timeline-element-date">{{ file.created_on.strftime('%d/%m/%Y, %X') }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% for status in statuses %}
+                                            <div class="vertical-timeline-item vertical-timeline-element">
+                                                <div><span class="vertical-timeline-element-icon bounce-in"> <i
+                                                        class="badge badge-dot badge-dot-xl badge-warning"> </i> </span>
+                                                    <div class="vertical-timeline-element-content bounce-in">
+                                                        {% if status.to == 0 %}
+                                                            <h4 class="timeline-title text-primary">
+                                                                Marked Ongoing
+                                                            </h4>
+                                                        {% elif status.to == 1 %}
+                                                            <h4 class="timeline-title text-success">
+                                                                Marked Complete
+                                                            </h4>
+                                                        {% endif %}
+                                                        <p>By {{ status.username }}
+                                                            <span class="vertical-timeline-element-date">{{ status.created_on.strftime('%d/%m/%Y, %X') }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Generation output log</h5>
+                            <hr>
+                            <div class="">
+                                {{ log_data }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+{% block header %}
+    <style>
+
+        .card {
+            box-shadow: 0 0.46875rem 2.1875rem rgba(4, 9, 20, 0.03), 0 0.9375rem 1.40625rem rgba(4, 9, 20, 0.03), 0 0.25rem 0.53125rem rgba(4, 9, 20, 0.05), 0 0.125rem 0.1875rem rgba(4, 9, 20, 0.03);
+            border-width: 0;
+            transition: all .2s
+        }
+
+        .card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            word-wrap: break-word;
+            background-color: #fff;
+            background-clip: border-box;
+            border: 1px solid rgba(26, 54, 126, 0.125);
+            border-radius: .25rem
+        }
+
+        .card-body {
+            flex: 1 1 auto;
+            padding: 1.25rem
+        }
+
+        .vertical-timeline {
+            width: 100%;
+            position: relative;
+            padding: 1.5rem 0 1rem
+        }
+
+        .vertical-timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 67px;
+            height: 100%;
+            width: 4px;
+            background: #e9ecef;
+            border-radius: .25rem
+        }
+
+        .vertical-timeline-element {
+            position: relative;
+            margin: 0 0 1rem
+        }
+
+        .vertical-timeline--animate .vertical-timeline-element-icon.bounce-in {
+            visibility: visible;
+            animation: cd-bounce-1 .8s
+        }
+
+        .vertical-timeline-element-icon {
+            position: absolute;
+            top: 0;
+            left: 60px
+        }
+
+        .vertical-timeline-element-icon .badge-dot-xl {
+            box-shadow: 0 0 0 5px #fff
+        }
+
+        .badge-dot-xl {
+            width: 18px;
+            height: 18px;
+            position: relative
+        }
+
+        .badge:empty {
+            display: none
+        }
+
+        .badge-dot-xl::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: .25rem;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            margin: -5px 0 0 -5px;
+            background: #fff
+        }
+
+        .vertical-timeline {
+            width: 100%;
+            position: relative;
+            padding: 1.5rem 0 1rem
+        }
+
+        .vertical-timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 67px;
+            height: 100%;
+            width: 4px;
+            background: #e9ecef;
+            border-radius: .25rem
+        }
+
+        .vertical-timeline-element {
+            position: relative;
+            margin: 0 0 1rem
+        }
+
+        .vertical-timeline--animate .vertical-timeline-element-icon.bounce-in {
+            visibility: visible;
+            animation: cd-bounce-1 .8s
+        }
+
+        .vertical-timeline-element-icon {
+            position: absolute;
+            top: 0;
+            left: 60px
+        }
+
+        .vertical-timeline-element-icon .badge-dot-xl {
+            box-shadow: 0 0 0 5px #fff
+        }
+
+        .badge-dot-xl {
+            width: 18px;
+            height: 18px;
+            position: relative
+        }
+
+        .badge:empty {
+            display: none
+        }
+
+        .badge-dot-xl::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: .25rem;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            margin: -5px 0 0 -5px;
+            background: #fff
+        }
+
+        .vertical-timeline-element-content {
+            position: relative;
+            margin-left: 90px;
+            font-size: .8rem
+        }
+
+        .vertical-timeline-element-content .timeline-title {
+            font-size: .8rem;
+            text-transform: uppercase;
+            margin: 0 0 .5rem;
+            padding: 2px 0 0;
+            font-weight: bold
+        }
+
+        .vertical-timeline-element-content .vertical-timeline-element-date {
+            display: block;
+            position: absolute;
+            left: -150px;
+            top: 0;
+            padding-right: 10px;
+            text-align: right;
+            color: #adb5bd;
+            font-size: .7619rem;
+            white-space: nowrap
+        }
+
+        .vertical-timeline-element-content:after {
+            content: "";
+            display: table;
+            clear: both
+        }
+    </style>
+{% endblock %}
+{% block footer %}
+    <script>
+        $('input[name="cleaned_file"]').change(function (evt) {
+            if (event.target.files.length) $(this).next('button[type="submit"]').removeClass('disabled')
+            else $(this).next('button[type="submit"]').addClass('disabled')
+        });
+    </script>
+{% endblock %}

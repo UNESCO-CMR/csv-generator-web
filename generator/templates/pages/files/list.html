@@ -1,0 +1,85 @@
+{% extends "layouts/app.html" %}
+{% block title %}{{ region.abbr }}{% endblock %}
+{% block content %}
+    {% include "partials/navbar.html" %}
+    <section class="container mt-5">
+        <div class="row justify-content-between mb-5">
+            <div class="col-10">
+                <a href="{{ url_for('region.index') }}" class="btn btn-dark btn-sm"><i class="fas fa-arrow-left"></i>
+                    Back to regions</a>
+            </div>
+            <div class="col-2">
+                <a href="{{ url_for('file.create_file', name=region.name) }}" class="btn btn-dark btn-sm">Add File <i
+                        class="fas fa-plus"></i></a>
+            </div>
+        </div>
+        {{ (region.files) }}
+        <table class="table table-dar table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Action</th>
+                <th scope="col">#</th>
+                <th scope="col">Title</th>
+                <th scope="col">Filename</th>
+                <th scope="col">Region</th>
+                <th scope="col">User</th>
+                <th scope="col">Status</th>
+                <th scope="col">Created</th>
+                <th scope="col">Option</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for file in files %}
+                <tr>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm disabled"><i class="fas fa-trash"></i> Del
+                        </button>
+                        <a href="{{ url_for('file.explore_file', title=file['title']) }}" type="button"
+                           class="btn btn-success btn-sm"><i class="fas fa-expand-arrows-alt"></i> Exp</a>
+                        <a href="{{ url_for('file.download_file', ID=file['id']) }}" type="button"
+                           class="btn btn-dark btn-sm"><i class="fas fa-download"></i> DL</a>
+                    </td>
+                    <th scope="row">{{ loop.index }}</th>
+                    <td {% if file.title|length > 30 %}data-bs-toggle="tooltip" data-bs-placement="top"
+                        title="{{ file.title }}"{% endif %}>
+                        {{ file.title[:30] + ("..." if file.title|length > 30 else '') }}
+                    </td>
+                    <td>{{ file.filename[:8] }}...</td>
+                    <td>{{ region.abbr }}</td>
+                    <td>{{ file.user }}</td>
+                    <td>
+                        {% if file.status == -1 %}
+                            <span class="badge bg-warning rounded-pill">Undone</span>
+                        {% elif file.status == 0 %}
+                            <span class="badge bg-primary rounded-pill">Ongoing</span>
+                        {% elif file.status == 1 %}
+                            <span class="badge bg-success rounded-pill">Complete</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ file.created_on.strftime('%a %d %b, %Y') }}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            {% if file.status != 1 %}
+
+                                {% if file.status == -1 %}
+                                    <a href="{{ url_for('file.change_status', ID=file.id) }}" type="button"
+                                       class="btn btn-warning btn-sm"><i class="fas fa-clock"></i> Start
+                                    </a>
+                                {% elif file.status == 0 %}
+                                    <a href="{{ url_for('file.explore_file', title=file['title']) }}" type="button"
+                                       class="btn btn-primary btn-sm"><i class="fas fa-expand-arrows-alt"></i> Exp</a>
+                                    {#<a href="{{ url_for('file.change_status', ID=file.id) }}" type="button"
+                                       class="btn btn-primary"><i class="fas fa-check-circle"></i>
+                                        Done
+                                    </a>#}
+                                {% endif %}
+
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+{% endblock %}

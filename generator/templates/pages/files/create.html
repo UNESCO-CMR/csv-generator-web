@@ -1,0 +1,64 @@
+{% extends "layouts/app.html" %}
+{% block title %}Add File{% endblock %}
+{% block content %}
+    {% include "partials/navbar.html" %}
+    <section class="container mt-5">
+        <div class="row justify-content-between mb-5">
+            <div class="col-10">
+                <a href="{{ url_for('file.index', name=region.name) }}" class="btn btn-dark btn-sm"><i class="fas fa-arrow-left"></i>
+                    Back to {{ region.abbr }}</a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-3"></div>
+            <div class="col-lg-6 pt-5">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Add a new file (EXCEL)</h5>
+                        <hr>
+                        <form class="form" autocomplete="off" method="post" enctype="multipart/form-data"
+                              action="{{ url_for('file.create_file', name=region.name) }}">
+                            <input type="hidden" autocomplete="false">
+                            <div class="mb-3">
+                                <input id="fileSelector" autofocus type=file name=file class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <input disabled type="text" name="abbr" value="{{ region.name }}" class="form-control"
+                                       placeholder="Region">
+                            </div>
+                            <div class="mb-3">
+                                <input id="nameEntry" type="text" name="title" value="{{ request.form['title'] }}"
+                                       class="form-control"
+                                       placeholder="Title">
+                            </div>
+                            <div class="row justify-content-between">
+                                <div class="col-6">
+                                    <button type="submit" class="btn btn-secondary"><i class="fas fa-plus"></i>
+                                        Save & Close
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button id="save_add_another" type="submit" class="float-end btn btn-primary"><i class="fas fa-plus"></i>
+                                        Save & Return
+                                    </button>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+{% block footer %}
+    <script>
+        $("#fileSelector").on('change', function (obj) {
+            $('#nameEntry').val(obj.target.files[0].name.split('.').slice(0, -1).join('.')).focus();
+        });
+        $("#save_add_another").click(function (evt) {
+            evt.preventDefault();
+            $('form.form').append("<input type='hidden' name='save_add_another' value='1'>").submit()
+        })
+    </script>
+{% endblock %}

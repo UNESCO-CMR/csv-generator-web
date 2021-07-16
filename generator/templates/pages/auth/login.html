@@ -1,0 +1,48 @@
+{% extends "layouts/app.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+    <div class="container" id="app_login">
+        <div class="row">
+            <div class="col-lg-3"></div>
+            <div class="col-lg-6 pt-5 mt-5" style="margin-top: 100px!important;">
+                <div class="card">
+                    <img style="margin: 30px 50px;" src="{{ url_for('static', filename='img/unesco-bl.png') }}"
+                         class="    " alt="UNESCO">
+                    <div class="card-body">
+                        <h5 class="card-title">Login</h5>
+                        <hr>
+                        <form class="form" autocomplete="off" method="post" action="{{ url_for('auth.login') }}">
+                            <input type="hidden" autocomplete="false">
+                            <div class="mb-3">
+                                <input autofocus type="text" name="username" value="{{ request.form['username'] }}" class="form-control"
+                                       placeholder="Username">
+                            </div>
+                            <div class="mb-3">
+                                <input type="password" name="password" class="form-control" placeholder="Password">
+                            </div>
+                            <span class="btn">
+                            Don't have an account? <a href="{{ url_for('auth.register') }}">Create an account</a>
+                            </span>
+                            <button type="submit" class="float-end btn btn-primary btn-lg">Login</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3"></div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block header %}
+    <style>
+        html {
+            background: url("{{url_for('static', filename='img/login-bg.jpg')}}") no-repeat center center fixed;
+            -webkit-background-size: cover;
+            -moz-background-size: cover;
+            -o-background-size: cover;
+            background-size: cover;
+            backdrop-filter: blur(5px);
+        }
+    </style>
+{% endblock %}

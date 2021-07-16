@@ -1,0 +1,33 @@
+{% extends "layouts/app.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+    {% include "partials/navbar.html" %}
+    <section class="container mt-5">
+        <p class="d-flex">
+            <a href="{{ url_for('region.create_region') }}" class="btn btn-dark btn-sm">Add <i class="fas fa-plus"></i></a>
+        </p>
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            {% for region in regions %}
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ region.name }}</h5>
+                            <p class="card-text">{{ region.abbr }}</p>
+                        </div>
+                        <div class="card-footer">
+                            <div class="row justify-content-between">
+                                <div class="col-9">
+                                    <small class="text-muted">{{ region.created_on.strftime('%a %d %b, %Y') }}
+                                        - {{ region.files }} file(s)</small>
+                                </div>
+                                <div class="col-3">
+                                    <a href="{{ url_for('file.index', name=region.name) }}" class="btn btn-primary btn-sm">Explore</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

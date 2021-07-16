@@ -1,0 +1,17 @@
+{% extends "layouts/app.html" %}
+{% block title %}Suspension{% endblock %}
+{% block content %}
+    <section class="p-5 mt-5">
+        <div class="alert alert-warning" role="alert">
+            <h4 class="alert-heading">WELCOME! THANKS FOR LOGGING IN</h4>
+            <p>Aww yeah, you successfully logged in. However, your account is still awaiting activation. <br>
+            <a class="btn btn-warning float-end btn-sm" href="{{ url_for('auth.logout') }}">Logout</a></p>
+
+            <hr>
+            <p class="mb-0">Please, contact the Administrator to grant you access. Sorry about this. </p>
+        </div>
+    </section>
+{% endblock %}
+{% block header %}
+    {% include "partials/background.html" %}
+{% endblock %}
