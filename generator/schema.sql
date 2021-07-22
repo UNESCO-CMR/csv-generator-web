@@ -51,7 +51,7 @@ CREATE TABLE file_statuses (
 	'from'	INTEGER NOT NULL,
 	'to'	INTEGER NOT NULL,
 	created_on	TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-)
+);
 
 
 CREATE TABLE generated_files (
