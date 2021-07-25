@@ -14,3 +14,7 @@ dist/
 build/
 *.egg-info/
 *.zip
+
+.htaccess
+passenger_wsgi.py
+/tmp
