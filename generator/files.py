@@ -10,6 +10,7 @@ from glob2 import glob
 from werkzeug.exceptions import abort
 from werkzeug.utils import secure_filename
 import uuid
+from urllib.parse import unquote
 
 from generator.auth import auth, redirect_back
 from generator.db import get_db
@@ -25,10 +26,9 @@ ALLOWED_EXTENSIONS = {'xlsx', 'xlsm', 'xlsb', 'xltx', 'xltm', 'xlt', 'xls', 'xml
 @auth
 def index(name):
     db = get_db()
-    region = db.execute(
-        "SELECT * FROM regions WHERE name = ?", (name,)
-    ).fetchone()
-
+    SQL = "SELECT * FROM regions WHERE name LIKE {}%{}%{}".format("'", unquote(name).strip(), "'")
+    region = db.execute(SQL).fetchone()
+    
     if region is not None:
         files = db.execute(
             "SELECT f.title, f.filename, f.created_on, f.id, f.region_id, f.status, f.user_id, u.username as user"
@@ -57,7 +57,7 @@ def create_file(name):
     region = db.execute(
         "SELECT * FROM regions WHERE name = ?", (name,)
     ).fetchone()
-
+    print(region)
     if request.method == 'POST':
         title = request.form['title']
         error = None
