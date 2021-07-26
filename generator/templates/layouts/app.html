@@ -10,6 +10,9 @@
     {% block header %}{% endblock %}
 </head>
 <body style="background-color: initial;">
+{% macro sentence_case(text) %}
+    {{ text[0]|upper}}{{text[1:] }}
+{% endmacro %}
 {% block navbar %}{% endblock %}
 {% with messages = get_flashed_messages(with_categories=True) %}
 

@@ -51,6 +51,5 @@ def create_region():
 
 def get_region_by_id(ID):
     return get_db().execute(
-        "SELECT * FROM regions WHERE id = ?", (ID, )
+        "SELECT * FROM regions WHERE id = ?", (ID,)
     ).fetchone()
-

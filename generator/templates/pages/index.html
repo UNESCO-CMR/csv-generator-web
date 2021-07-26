@@ -3,9 +3,18 @@
 {% block content %}
     {% include "partials/navbar.html" %}
     <section class="container mt-5">
-        <p class="d-flex">
-            <a href="{{ url_for('region.create_region') }}" class="btn btn-dark btn-sm">Add <i class="fas fa-plus"></i></a>
-        </p>
+        <div class="row justify-content-between mb-5">
+            <div class="col-10">
+                <a href="{{ url_for('region.create_region') }}" class="btn btn-dark btn-sm">Add <i
+                        class="fas fa-plus"></i></a>
+            </div>
+            <div class="col-2">
+                {% if g.user.role == 'admin' %}
+                    <a href="{{ url_for('user.index') }}" class="btn btn-dark btn-sm">Access users <i
+                            class="fas fa-users"></i></a>
+                {% endif %}
+            </div>
+        </div>
         <div class="row row-cols-1 row-cols-md-3 g-4">
             {% for region in regions %}
                 <div class="col">
@@ -21,7 +30,8 @@
                                         - {{ region.files }} file(s)</small>
                                 </div>
                                 <div class="col-3">
-                                    <a href="{{ url_for('file.index', name=region.name) }}" class="btn btn-primary btn-sm">Explore</a>
+                                    <a href="{{ url_for('file.index', name=region.name) }}"
+                                       class="btn btn-primary btn-sm">Explore</a>
                                 </div>
                             </div>
                         </div>

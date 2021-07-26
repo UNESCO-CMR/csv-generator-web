@@ -116,5 +116,17 @@ def guest(view):
     return wrapped_views
 
 
+def admin(view):
+    @functools.wraps(view)
+    def wrapped_views(**kwargs):
+        if g.user['role'] != 'admin':
+            flash("You are not authorized to access this resource.", "danger")
+            return redirect(url_for('region.index'))
+
+        return view(**kwargs)
+
+    return wrapped_views
+
+
 def redirect_back(default='region.index'):
     return request.args.get('next') or request.referrer or url_for(default)

@@ -1,0 +1,68 @@
+{% extends "layouts/app.html" %}
+{% block title %}Users{% endblock %}
+{% block content %}
+    {% include "partials/navbar.html" %}
+    <section class="container mt-5">
+        <div class="row justify-content-between mb-5">
+            <div class="col-10">
+                <a href="{{ url_for('region.index') }}" class="btn btn-dark btn-sm"><i class="fas fa-arrow-left"></i>
+                    Back to home</a>
+            </div>
+            <div class="col-2"></div>
+        </div>
+        <table class="table table-dar table-striped">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Username</th>
+                <th scope="col">E-mail</th>
+                <th scope="col">Created</th>
+                <th scope="col">Role</th>
+                <th scope="col">Status</th>
+                <th scope="col">Created</th>
+                <th scope="col">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for user in users %}
+                <tr>
+                    <th scope="row">{{ loop.index }}</th>
+                    <td>@{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.created_on.strftime('%a %d %b, %Y') }}</td>
+                    <td>
+                        {% if user.role == 'editor' %}
+                            <span class="badge bg-primary rounded-pill">{{ sentence_case(user.role) }}</span>
+                        {% else %}
+                            <span class="badge bg-success rounded-pill">{{ sentence_case(user.role) }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.status == 0 %}
+                            <span class="badge bg-danger rounded-pill">Inactivate</span>
+                        {% else %}
+                            <span class="badge bg-success rounded-pill">Active</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.created_on.strftime('%a %d %b, %Y') }}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a href="{{ url_for('user.change_status', user_id=user.id) }}" type="button"
+                               class="btn btn-{{ 'danger' if user.status else 'success' }} btn-sm {{ 'disabled' if loop.first else '' }}">
+                                <i class="fas fa-{{ 'ban' if user.status else 'check' }}"></i>
+                                {{ 'Deactivate' if user.status else 'Activate' }}
+                            </a>
+                            <a
+                                    href="{{ url_for('user.promote_demote', user_id=user.id) }}" type="button"
+                                    class="btn btn-sm btn-primary {{ 'disabled' if loop.first else '' }}">
+                                <i class="fas fa-arrow-{{ 'down' if user.role == 'admin' else 'up' }}"></i>
+                                {{ 'Demote' if user.role == 'admin' else 'Promote' }}
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+{% endblock %}
