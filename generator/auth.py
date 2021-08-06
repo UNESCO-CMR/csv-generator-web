@@ -92,6 +92,16 @@ def logout():
     return redirect(url_for('auth.login'))
 
 
+@bp.route('/normalise')
+def normalise():
+    db = get_db()
+    regions = db.execute("SELECT * FROM regions").fetchall()
+    for region in regions:
+        db.execute("UPDATE regions SET name=? WHERE id=?", (region['name'].strip(), region['id']))
+    db.commit()
+    return "All done"
+
+
 def auth(view):
     @functools.wraps(view)
     def wrapped_views(**kwargs):
