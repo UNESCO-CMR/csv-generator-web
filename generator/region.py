@@ -25,7 +25,7 @@ def index():
 @auth
 def create_region():
     if request.method == 'POST':
-        name = request.form['name']
+        name = request.form['name'].replace(" ", "")
         abbr = request.form['abbr']
         error = None
 

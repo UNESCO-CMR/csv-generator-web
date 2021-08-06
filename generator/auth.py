@@ -97,7 +97,7 @@ def normalise():
     db = get_db()
     regions = db.execute("SELECT * FROM regions").fetchall()
     for region in regions:
-        db.execute("UPDATE regions SET name=? WHERE id=?", (region['name'].strip(), region['id']))
+        db.execute("UPDATE regions SET name=? WHERE id=?", (region['name'].strip().replace(" ", ""), region['id']))
     db.commit()
     return "All done"
 
