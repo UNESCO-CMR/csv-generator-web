@@ -28,7 +28,7 @@ def index(name):
     db = get_db()
     SQL = "SELECT * FROM regions WHERE name LIKE {}%{}%{}".format("'", unquote(name).strip(), "'")
     region = db.execute(SQL).fetchone()
-    
+
     if region is not None:
         files = db.execute(
             "SELECT f.title, f.filename, f.created_on, f.id, f.region_id, f.status, f.user_id, u.username as user"
@@ -59,25 +59,30 @@ def create_file(name):
     ).fetchone()
 
     if request.method == 'POST':
-        title = request.form['title']
+        files = request.files.getlist('file[]')
+        multiple = len(files) > 1
+        title = None
+        if not multiple:
+            title = request.form['title']
         error = None
 
-        if 'file' not in request.files:
-            error = "No file was selected. Please, choose a file"
-        elif not allowed_file(request.files['file'].filename):
-            error = "The selected file is invalid. Please, choose a file with either of the extensions: " + ", ".join(
+        if not len(files):
+            error = "No file was selected. Please, choose a file."
+        elif not multiple and not title:
+            error = "Uploading a single file requires a title. Please, enter a title."
+
+        if False in [allowed_file(file.filename) for file in files]:
+            error = "The selected file is invalid (NOT EXCEL). Please, choose a file with either of the extensions: " + ", ".join(
                 ALLOWED_EXTENSIONS)
-        elif title is None:
-            error = "Please, enter a title"
 
         if error is None:
-            file = request.files['file']
-            if file:
+            for file in files:
                 filename = secure_filename(str(uuid.uuid4().hex))
                 file_ext = os.path.splitext(file.filename)[1]
                 full_name = filename + file_ext
                 save_dir = os.path.join(filename)
                 save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], save_dir)
+                title = os.path.splitext(file.filename)[0] if multiple else title
                 try:
                     os.makedirs(save_path)
                 except OSError:
@@ -90,14 +95,14 @@ def create_file(name):
                     "INSERT INTO files (title, path, filename, region_id, user_id) VALUES (?, ?, ?, ?, ?)",
                     (title, save_dir, full_name, region['id'], g.user['id'])
                 )
-                db.commit()
+            db.commit()
 
-                flash("File successfully added to server.", "success")
+            flash("File{} successfully added to server.".format("" if not multiple else "s"), "success")
 
-                if 'save_add_another' in request.form and request.form['save_add_another']:
-                    return redirect(url_for('file.create_file', name=name))
+            if 'save_add_another' in request.form and request.form['save_add_another']:
+                return redirect(url_for('file.create_file', name=name))
 
-                return redirect(url_for('file.index', name=name))
+            return redirect(url_for('file.index', name=name))
 
         flash(error, "warning")
 
@@ -137,7 +142,8 @@ def remove_cleaned_file(ID):
     clean_path = os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned_file['path'], cleaned_file['filename'])
     if os.path.isfile(clean_path):
         os.remove(clean_path)
-    gen_path = os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned_file['path'], current_app.config['GENERATED_DIR'])
+    gen_path = os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned_file['path'],
+                            current_app.config['GENERATED_DIR'])
     if os.path.isdir(gen_path):
         shutil.rmtree(gen_path)
     db = get_db()
@@ -171,8 +177,9 @@ def download_generated_file(ID, filename):
 
     return send_from_directory(
         os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned_file['path'], current_app.config['GENERATED_DIR']),
-        filename, as_attachment=True, attachment_filename="{}_{}{}".format(secure_filename(os.path.splitext(filename)[0]), str(dt.now()),
-                                                                           os.path.splitext(filename)[1]))
+        filename, as_attachment=True,
+        attachment_filename="{}_{}{}".format(secure_filename(os.path.splitext(filename)[0]), str(dt.now()),
+                                             os.path.splitext(filename)[1]))
 
 
 @bp.route('/download-clean/<ID>')
