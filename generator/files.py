@@ -57,7 +57,7 @@ def create_file(name):
     region = db.execute(
         "SELECT * FROM regions WHERE name = ?", (name,)
     ).fetchone()
-    print(region)
+
     if request.method == 'POST':
         title = request.form['title']
         error = None
@@ -190,9 +190,9 @@ def download_cleaned_file(ID):
                                                                     os.path.splitext(cleaned_file['filename'])[1]))
 
 
-@bp.route('/explore/<string:title>')
-def explore_file(title):
-    file = get_file_by_title(title)
+@bp.route('/explore/<int:identifier>')
+def explore_file(identifier):
+    file = get_file_by_id(identifier)
     region = get_region_by_id(file['region_id'])
     user = get_user_by_id(file['user_id'])
     statuses = get_db().execute(
