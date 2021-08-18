@@ -4,7 +4,7 @@ import shutil
 from datetime import datetime as dt
 
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for, current_app, send_from_directory
+    Blueprint, flash, g, redirect, render_template, request, url_for, current_app, send_from_directory, send_file
 )
 from glob2 import glob
 from werkzeug.exceptions import abort
@@ -161,11 +161,11 @@ def download_file(ID):
     if not file:
         flash("The specified file does not exists.", "warning")
         return redirect(url_for("region.index"))
-
-    return send_from_directory(os.path.join(current_app.config['UPLOAD_FOLDER'], file['path']), file['filename'],
-                               as_attachment=True,
-                               attachment_filename="{}_{}{}".format(secure_filename(file['title']), str(dt.now()),
-                                                                    os.path.splitext(file['filename'])[1]))
+    # send_file()
+    return send_file(os.path.join(current_app.config['UPLOAD_FOLDER'], file['path'], file['filename']),
+                     as_attachment=True,
+                     attachment_filename="{}_{}{}".format(secure_filename(file['title']), str(dt.now()),
+                                                          os.path.splitext(file['filename'])[1]))
 
 
 @bp.route('/download/<int:ID>/<filename>')
