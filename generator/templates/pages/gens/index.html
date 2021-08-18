@@ -50,7 +50,7 @@
                                 <a href="" class="btn btn-danger btn-sm disabled">
                                     Remove <i class="fas fa-trash"></i>
                                 </a>
-                                <a href="{{ url_for('file.download_file', ID=file['id']) }}"
+                                <a href="{{ url_for('file.download_file', ID=file['id'], filename=file['title']) }}"
                                    class="btn btn-success btn-sm">
                                     Download <i class="fas fa-download"></i>
                                 </a>
