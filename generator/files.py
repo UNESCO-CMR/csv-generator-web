@@ -18,7 +18,7 @@ from generator.region import get_region_by_id
 from generator.user import get_user_by_id
 from generator.util import main as gen_master
 
-bp = Blueprint('file', __name__)
+bp = Blueprint('file', __name__, url_prefix='/files')
 ALLOWED_EXTENSIONS = {'xlsx', 'xlsm', 'xlsb', 'xltx', 'xltm', 'xlt', 'xls', 'xml', 'xml', 'xlam', 'xla', 'xlw', 'xlr'}
 
 
@@ -158,6 +158,7 @@ def remove_cleaned_file(ID):
 @bp.route('/dl/files/<int:ID>')
 def download_file(ID):
     file = get_file_by_id(ID)
+    print(file['filename'], file['title'], file['created_on'])
     if not file:
         flash("The specified file does not exists.", "warning")
         return redirect(url_for("region.index"))
@@ -168,7 +169,7 @@ def download_file(ID):
                                                           os.path.splitext(file['filename'])[1]))
 
 
-@bp.route('/download/<int:ID>/<filename>')
+@bp.route('/dl/gen/<int:ID>/<filename>')
 def download_generated_file(ID, filename):
     cleaned_file = get_cleaned_file_by_id(ID)
     if not cleaned_file:
@@ -182,7 +183,7 @@ def download_generated_file(ID, filename):
                                              os.path.splitext(filename)[1]))
 
 
-@bp.route('/download-clean/<ID>')
+@bp.route('/dl/cleaned/<ID>')
 def download_cleaned_file(ID):
     cleaned_file = get_cleaned_file_by_id(ID)
     if not cleaned_file:
