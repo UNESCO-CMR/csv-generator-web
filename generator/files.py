@@ -155,7 +155,7 @@ def remove_cleaned_file(ID):
     return redirect(redirect_back())
 
 
-@bp.route('/download/<ID>')
+@bp.route('/download/<int:ID>')
 def download_file(ID):
     file = get_file_by_id(ID)
     if not file:
