@@ -3,11 +3,11 @@ import os
 
 
 def create_app(environ=None, start_response=None, test_config=None):
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask(__name__, instance_relative_config=False)
     app.config.from_mapping(
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'generator.sqlite'),
-        UPLOAD_FOLDER=os.path.join(app.instance_path, '../../instance/uploads'),
+        UPLOAD_FOLDER=os.path.join(app.instance_path, 'uploads'),
         GENERATED_DIR='generated',
         LOG_FILENAME='output.log',
         FILE_STATUSES={'Undone': -1, 'Ongoing': 0, 'Done': 1}

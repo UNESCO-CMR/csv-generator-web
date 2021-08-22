@@ -158,7 +158,7 @@ def remove_cleaned_file(ID):
 @bp.route('/dl/files/<int:ID>')
 def download_file(ID):
     file = get_file_by_id(ID)
-    print(file['filename'], file['title'], file['created_on'])
+    print(current_app.config['UPLOAD_FOLDER'], file['filename'], file['title'], file['created_on'])
     if not file:
         flash("The specified file does not exists.", "warning")
         return redirect(url_for("region.index"))
