@@ -18,3 +18,4 @@ build/
 .htaccess
 passenger_wsgi.py
 /tmp
+.ftpquota

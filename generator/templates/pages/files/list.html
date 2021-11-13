@@ -1,14 +1,17 @@
 {% extends "layouts/app.html" %}
 {% block title %}{{ region.abbr }}{% endblock %}
+{% block region %}{{ region.abbr }}{% endblock %}
 {% block content %}
     {% include "partials/navbar.html" %}
     <section class="container mt-5">
         <div class="row justify-content-between mb-5">
-            <div class="col-10">
+            <div class="col-5">
                 <a href="{{ url_for('region.index') }}" class="btn btn-dark btn-sm"><i class="fas fa-arrow-left"></i>
                     Back to regions</a>
             </div>
-            <div class="col-2">
+            <strong class="col-3">{{ region.name }}</strong>
+            <div class="col-2"></div>
+            <div class="col pull-right float-right right align-right">
                 <a href="{{ url_for('file.create_file', name=region.name) }}" class="btn btn-dark btn-sm">Add File <i
                         class="fas fa-plus"></i></a>
             </div>
