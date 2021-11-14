@@ -158,12 +158,12 @@ def remove_cleaned_file(ID):
 @bp.route('/dl/files/<int:ID>')
 def download_file(ID):
     file = get_file_by_id(ID)
-    print(current_app.config['UPLOAD_FOLDER'], file['filename'], file['title'], file['created_on'])
+    # print(current_app.config['UPLOAD_FOLDER'], file['filename'], file['title'], file['created_on'])
     if not file:
         flash("The specified file does not exists.", "warning")
         return redirect(url_for("region.index"))
-    # send_file()
-    return send_file(os.path.join(current_app.config['UPLOAD_FOLDER'], file['path'], file['filename']),
+
+    return send_file(os.path.join("..", current_app.instance_path, "uploads", file['path'], file['filename']),
                      as_attachment=True,
                      attachment_filename="{}_{}{}".format(secure_filename(file['title']), str(dt.now()),
                                                           os.path.splitext(file['filename'])[1]))
@@ -176,9 +176,10 @@ def download_generated_file(ID, filename):
         flash("The specified file does not exists.", "warning")
         return redirect(url_for("region.index"))
 
-    return send_from_directory(
-        os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned_file['path'], current_app.config['GENERATED_DIR']),
-        filename, as_attachment=True,
+    return send_file(
+        os.path.join("..", current_app.config['UPLOAD_FOLDER'], cleaned_file['path'],
+                     current_app.config['GENERATED_DIR'],
+                     filename), as_attachment=True,
         attachment_filename="{}_{}{}".format(secure_filename(os.path.splitext(filename)[0]), str(dt.now()),
                                              os.path.splitext(filename)[1]))
 
@@ -190,12 +191,10 @@ def download_cleaned_file(ID):
         flash("The specified file does not exists.", "warning")
         return redirect(url_for("region.index"))
 
-    return send_from_directory(os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned_file['path']),
-                               cleaned_file['filename'],
-                               as_attachment=True,
-                               attachment_filename="{}_{}{}".format(secure_filename(cleaned_file['title']),
-                                                                    str(dt.now()),
-                                                                    os.path.splitext(cleaned_file['filename'])[1]))
+    return send_file(os.path.join("..", current_app.config['UPLOAD_FOLDER'], cleaned_file['path'],
+                                  cleaned_file['filename']), as_attachment=True,
+                     attachment_filename="{}_{}{}".format(secure_filename(cleaned_file['title']),
+                                                          str(dt.now()), os.path.splitext(cleaned_file['filename'])[1]))
 
 
 @bp.route('/explore/<int:identifier>')
