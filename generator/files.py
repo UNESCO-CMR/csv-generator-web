@@ -158,15 +158,24 @@ def remove_cleaned_file(ID):
 @bp.route('/dl/files/<int:ID>')
 def download_file(ID):
     file = get_file_by_id(ID)
-    print(current_app.config['UPLOAD_FOLDER'], file['filename'], file['title'], file['created_on'])
+    # print(current_app.config['UPLOAD_FOLDER'], file['filename'], file['title'], file['created_on'])
     if not file:
         flash("The specified file does not exists.", "warning")
         return redirect(url_for("region.index"))
     # send_file()
-    return send_file(os.path.join(current_app.config['UPLOAD_FOLDER'], file['path'], file['filename']),
-                     as_attachment=True,
-                     attachment_filename="{}_{}{}".format(secure_filename(file['title']), str(dt.now()),
-                                                          os.path.splitext(file['filename'])[1]))
+   # filepath = "{}".format(os.path.join(current_app.config['UPLOAD_FOLDER'], file['path'], file['filename']))
+   # return filepath + "/////////" + filepath.replace("generator/", "")
+    #filepath = filepath.replace("generator/", "")
+    # root_dir = os.path.dirname(os.getcwd())
+    # print("Working directory: ", root_dir)
+    # print("Path:::: ", os.path.join(current_app.instance_path, "uploads", file['path']))
+    return send_file(os.path.join("..", current_app.instance_path, "uploads", file['path'], file['filename']),
+                               as_attachment=True,
+                               attachment_filename="{}_{}{}".format(secure_filename(file['title']), str(dt.now()), os.path.splitext(file['filename'])[1]))
+    #return send_file(filepath,
+    #                 as_attachment=True,
+    #                 attachment_filename="{}_{}{}".format(secure_filename(file['title']), str(dt.now()),
+    #                                                      os.path.splitext(file['filename'])[1]))
 
 
 @bp.route('/dl/gen/<int:ID>/<filename>')
