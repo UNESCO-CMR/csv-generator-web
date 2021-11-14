@@ -162,20 +162,11 @@ def download_file(ID):
     if not file:
         flash("The specified file does not exists.", "warning")
         return redirect(url_for("region.index"))
-    # send_file()
-   # filepath = "{}".format(os.path.join(current_app.config['UPLOAD_FOLDER'], file['path'], file['filename']))
-   # return filepath + "/////////" + filepath.replace("generator/", "")
-    #filepath = filepath.replace("generator/", "")
-    # root_dir = os.path.dirname(os.getcwd())
-    # print("Working directory: ", root_dir)
-    # print("Path:::: ", os.path.join(current_app.instance_path, "uploads", file['path']))
+
     return send_file(os.path.join("..", current_app.instance_path, "uploads", file['path'], file['filename']),
-                               as_attachment=True,
-                               attachment_filename="{}_{}{}".format(secure_filename(file['title']), str(dt.now()), os.path.splitext(file['filename'])[1]))
-    #return send_file(filepath,
-    #                 as_attachment=True,
-    #                 attachment_filename="{}_{}{}".format(secure_filename(file['title']), str(dt.now()),
-    #                                                      os.path.splitext(file['filename'])[1]))
+                     as_attachment=True,
+                     attachment_filename="{}_{}{}".format(secure_filename(file['title']), str(dt.now()),
+                                                          os.path.splitext(file['filename'])[1]))
 
 
 @bp.route('/dl/gen/<int:ID>/<filename>')
@@ -185,9 +176,10 @@ def download_generated_file(ID, filename):
         flash("The specified file does not exists.", "warning")
         return redirect(url_for("region.index"))
 
-    return send_from_directory(
-        os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned_file['path'], current_app.config['GENERATED_DIR']),
-        filename, as_attachment=True,
+    return send_file(
+        os.path.join("..", current_app.config['UPLOAD_FOLDER'], cleaned_file['path'],
+                     current_app.config['GENERATED_DIR'],
+                     filename), as_attachment=True,
         attachment_filename="{}_{}{}".format(secure_filename(os.path.splitext(filename)[0]), str(dt.now()),
                                              os.path.splitext(filename)[1]))
 
@@ -199,12 +191,10 @@ def download_cleaned_file(ID):
         flash("The specified file does not exists.", "warning")
         return redirect(url_for("region.index"))
 
-    return send_from_directory(os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned_file['path']),
-                               cleaned_file['filename'],
-                               as_attachment=True,
-                               attachment_filename="{}_{}{}".format(secure_filename(cleaned_file['title']),
-                                                                    str(dt.now()),
-                                                                    os.path.splitext(cleaned_file['filename'])[1]))
+    return send_file(os.path.join("..", current_app.config['UPLOAD_FOLDER'], cleaned_file['path'],
+                                  cleaned_file['filename']), as_attachment=True,
+                     attachment_filename="{}_{}{}".format(secure_filename(cleaned_file['title']),
+                                                          str(dt.now()), os.path.splitext(cleaned_file['filename'])[1]))
 
 
 @bp.route('/explore/<int:identifier>')
