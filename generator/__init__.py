@@ -10,7 +10,8 @@ def create_app(environ=None, start_response=None, test_config=None):
         UPLOAD_FOLDER=os.path.join(app.instance_path, 'uploads'),
         GENERATED_DIR='generated',
         LOG_FILENAME='output.log',
-        FILE_STATUSES={'Undone': -1, 'Ongoing': 0, 'Done': 1}
+        FILE_STATUSES={'Undone': -1, 'Ongoing': 0, 'Done': 1},
+        PLATFORMS={'MY_SCHOOL_ONLINE': "MY SCHOOL ONLINE", 'MON_ECOLE_ENLIGNE': "MON ECOLE ENLIGNE"}
     )
 
     if test_config is None:

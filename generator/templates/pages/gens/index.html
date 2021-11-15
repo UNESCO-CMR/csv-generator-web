@@ -64,16 +64,30 @@
                         <div class="card-body">
                             <h5 class="card-title">Cleaned File:
                                 {% if cleaned is not none %}
-                                    <i class="fas fa-file-excel"></i> {{ cleaned.title }} </h5>
+                                    <i class="fas fa-file-excel"></i> {{ cleaned.title }}
+                                    <span class="badge bg-primary">{{ cleaned.platform }}</span></h5>
                                 {% else %}
                                     <form enctype="multipart/form-data"
                                           action="{{ url_for('file.add_cleaned_file', file_id=file.id) }}"
                                           method="post">
                                         <div class="input-group mb-3">
                                             <input class="form-control" type="file" name="cleaned_file">
-                                            <button class="btn btn-outline-secondary disabled" type="submit">
+                                            <button id="submit_cleaned" class="btn btn-outline-secondary disabled"
+                                                    type="submit">
                                                 Upload File
                                             </button>
+                                        </div>
+                                        <div class="input-group-mb-3">
+                                            <input type="radio" value="MON_ECOLE_ENLIGNE" class="btn-check" name="platform"
+                                                   id="MON_ECOLE_ENLIGNE" autocomplete="off">
+                                            <label class="btn btn-outline-primary btn-sm" for="MON_ECOLE_ENLIGNE">
+                                                Mon Ecole En Ligne
+                                            </label>
+                                            <input type="radio" value="MY_SCHOOL_ONLINE" class="btn-check" name="platform"
+                                                   id="MY_SCHOOL_ONLINE" autocomplete="off">
+                                            <label class="btn btn-outline-primary btn-sm" for="MY_SCHOOL_ONLINE">
+                                                My School Online
+                                            </label>
                                         </div>
                                     </form>
                                 {% endif %}
@@ -123,7 +137,8 @@
                                                     {{ gen }}
                                                 </div>
                                                 <div class="col-2">
-                                                    <a href="{{ url_for('file.download_generated_file', ID=cleaned.id, filename=gen) }}" class="btn btn-success btn-sm">Download</a>
+                                                    <a href="{{ url_for('file.download_generated_file', ID=cleaned.id, filename=gen) }}"
+                                                       class="btn btn-success btn-sm">Download</a>
                                                 </div>
                                             </div>
                                         </li>
@@ -377,8 +392,18 @@
 {% block footer %}
     <script>
         $('input[name="cleaned_file"]').change(function (evt) {
-            if (event.target.files.length) $(this).next('button[type="submit"]').removeClass('disabled')
-            else $(this).next('button[type="submit"]').addClass('disabled')
+            if (evt.target.files.length && $('input[name="platform"]:checked').length) {
+                $('#submit_cleaned').removeClass('disabled')
+            } else {
+                $('#submit_cleaned').addClass('disabled')
+            }
+        });
+        $('input[name="platform"]').change(function (evt) {
+            if ($('input[name="cleaned_file"]')[0].files.length) {
+                $('#submit_cleaned').removeClass('disabled')
+            } else {
+                $('#submit_cleaned').addClass('disabled')
+            }
         });
     </script>
 {% endblock %}

@@ -247,6 +247,7 @@ def add_cleaned_file(file_id):
         title = "{}_{}".format(
             os.path.splitext(request.files['cleaned_file'].filename)[0], "CLEANED")
         cleaned_file = request.files['cleaned_file']
+        pltfrm = request.form.get('platform')
         if cleaned_file:
             filename = secure_filename(str(uuid.uuid4().hex)) + "_CLEANED"
             file_ext = os.path.splitext(cleaned_file.filename)[1]
@@ -257,8 +258,8 @@ def add_cleaned_file(file_id):
             cleaned_file.save(save_path)
 
             db.execute(
-                "INSERT INTO cleaned_files (title, path, filename, file_id, user_id) VALUES (?, ?, ?, ?, ?)",
-                (title, save_dir, full_name, file_id, g.user['id'])
+                "INSERT INTO cleaned_files (title, path, filename, file_id, user_id, platform) VALUES (?, ?, ?, ?, ?, ?)",
+                (title, save_dir, full_name, file_id, g.user['id'], pltfrm)
             )
             db.commit()
 
