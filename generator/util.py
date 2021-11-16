@@ -169,7 +169,7 @@ def main(config=None):
                     col += 1
                 current_row += 1
             if config['EXPORT_CSV']:
-                CSV = "{}/{}.GEN_{}.csv".format(config['SAVE_PATH'], wb.sheetnames.index(sheet_name) + 1, ws.title)
+                CSV = "{}/{}.GEN_{}.csv".format(config['SAVE_PATH'], wb.sheetnames.index(sheet_name) + 1, ws.title.replace(" ", "_"))
                 with open(CSV, 'w', newline="", encoding='utf-8') as fh:
                     c = csv.writer(fh, delimiter=config['CSV_DELIMITER'])
                     for r in ws.rows:
