@@ -33,13 +33,16 @@ def index(name):
     if region is not None:
         files = db.execute(
             "SELECT f.title, f.filename, f.created_on, f.id, f.region_id, f.status, f.user_id, u.username as user"
+            # ", c.females, c.males"
             " FROM files AS f "
             "INNER JOIN regions AS r ON f.region_id = r.id "
             "INNER JOIN users AS u ON f.user_id = u.id "
+            # "JOIN cleaned_files AS c ON f.id = c.file_id "
             # "LEFT JOIN generated_files ON files.id = generated_files.file_id "
             # "INNER JOIN users ON files.user_id = users.id"
             "WHERE r.id = ? ", (region['id'],)
         ).fetchall()
+
         return render_template("pages/files/list.html", region=region, files=files)
 
     flash("The specified data does not exists", "warning")
@@ -301,10 +304,18 @@ def generate_csv(cleaned_id):
         'CSV_DELIMITER': ";",
         'PASSWORD_LENGTH': 1,
         'LOG_FILE': os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned['path'],
-                                 current_app.config['LOG_FILENAME'])
+                                 current_app.config['LOG_FILENAME']),
+        'PLATFORM': cleaned['platform']
     }
     print(config['FILENAME'])
-    _ = gen_master(config)
+    stats = gen_master(config)
+    print(stats)
+    db = get_db()
+    db.execute(
+        "UPDATE cleaned_files SET males = ?, females = ? WHERE id = ?", (stats['males'], stats['females'], cleaned_id)
+    )
+    db.commit()
+
     with open(config['LOG_FILE'], 'r') as f:
         log = f.readlines()
 

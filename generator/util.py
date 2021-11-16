@@ -78,7 +78,8 @@ def load_usernames(path):
     import os
     usernames = []
     head, _ = os.path.split(path)
-    files = glob.glob(os.path.join(current_app.config['UPLOAD_FOLDER'], "*/{}/*.xlsx".format(current_app.config['GENERATED_DIR'])))
+    files = glob.glob(
+        os.path.join(current_app.config['UPLOAD_FOLDER'], "*/{}/*.xlsx".format(current_app.config['GENERATED_DIR'])))
     logging.info("Loading used usernames...")
     for final in files:
         wb = load_workbook(final)
@@ -106,22 +107,31 @@ def main(config=None):
 
     log_file = None
     old_log = sys.stdout
+    stats = {"males": 0, "females": 0}
     try:
         log_file = open(config['LOG_FILE'], "w")
         sys.stdout = log_file
         wb = load_workbook(config['FILENAME'])
         usernames = load_usernames(config['SAVE_PATH'])
+        pltform = config['PLATFORM']
 
         for sheet_name in wb.sheetnames:
             ws = wb[sheet_name]
 
             labels = [[field.value.lower() for field in row if field.value] for row in ws.iter_rows(max_row=1)][0]
             # print("WS: ", labels)
+
             USERNAME_COL = labels.index('username') + 1
             F_NAME_COL = labels.index('firstname') + 1
             L_NAME_COL = labels.index('lastname') + 1
             PASS_COL = labels.index('password') + 1
-            ETABLISSMENT_COL = labels.index('profile_field_etablissement') + 1
+
+            PLATFORM_ETABLISSEMENT_TITLE = 'profile_field_' + (
+                'etablissement' if pltform == "MON_ECOLE_ENLIGNE" else 'school_name')
+            ETABLISSMENT_COL = labels.index(PLATFORM_ETABLISSEMENT_TITLE) + 1
+
+            PLATFORM_GENDER_TITLE = 'profile_field_' + ('sexe' if pltform == "MON_ECOLE_ENLIGNE" else 'sex')
+            GENDER_COL = labels.index(PLATFORM_GENDER_TITLE) + 1
 
             current_row = 1
             for row in ws.iter_rows():
@@ -166,10 +176,15 @@ def main(config=None):
 
                             usernames.append(username)
                             ws.cell(row=cell.row, column=cell.column, value=username)
+                        gender = ws.cell(row=current_row, column=GENDER_COL).value
+                        if len(gender):
+                            gen_index = "males" if gender.lower().startswith("m") else "females"
+                            stats[gen_index] += 1
                     col += 1
                 current_row += 1
             if config['EXPORT_CSV']:
-                CSV = "{}/{}.GEN_{}.csv".format(config['SAVE_PATH'], wb.sheetnames.index(sheet_name) + 1, ws.title.replace(" ", "_"))
+                CSV = "{}/{}.GEN_{}.csv".format(config['SAVE_PATH'], wb.sheetnames.index(sheet_name) + 1,
+                                                ws.title.replace(" ", "_"))
                 with open(CSV, 'w', newline="", encoding='utf-8') as fh:
                     c = csv.writer(fh, delimiter=config['CSV_DELIMITER'])
                     for r in ws.rows:
@@ -188,4 +203,4 @@ def main(config=None):
             log_file.close()
         sys.stdout = old_log
 
-    return
+    return stats
