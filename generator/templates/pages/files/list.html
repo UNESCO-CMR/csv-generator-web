@@ -33,24 +33,25 @@
             </thead>
             <tbody>
             {% for file in files %}
-                <tr>
+                <tr data-id="{{ file['id'] }}" data-status="{{ file['status'] }}">
                     <td>
                         <button type="button" class="btn btn-danger btn-sm disabled"><i class="fas fa-trash"></i> Del
                         </button>
                         <a href="{{ url_for('file.explore_file', identifier=file['id']) }}" type="button"
                            class="btn btn-success btn-sm"><i class="fas fa-expand-arrows-alt"></i> Exp</a>
-                        <a href="{{ url_for('file.download_file', ID=file['id'], filename=file['title']) }}" type="button"
+                        <a href="{{ url_for('file.download_file', ID=file['id'], filename=file['title']) }}"
+                           type="button"
                            class="btn btn-dark btn-sm"><i class="fas fa-download"></i> DL</a>
                     </td>
                     <th scope="row">{{ loop.index }}</th>
-                    <td {% if file.title|length > 30 %}data-bs-toggle="tooltip" data-bs-placement="top"
+                    <td data-title {% if file.title|length > 30 %}data-bs-toggle="tooltip" data-bs-placement="top"
                         title="{{ file.title }}"{% endif %}>
                         {{ file.title[:30] + ("..." if file.title|length > 30 else '') }}
                     </td>
                     <td>{{ file.filename[:8] }}...</td>
                     <td>{{ region.abbr }}</td>
                     <td>{{ file.user }}</td>
-                    <td>
+                    <td class="status-badge">
                         {% if file.status == -1 %}
                             <span class="badge bg-warning rounded-pill">Undone</span>
                         {% elif file.status == 0 %}
@@ -60,23 +61,19 @@
                         {% endif %}
                     </td>
                     <td>{{ file.created_on.strftime('%a %d %b, %Y') }}</td>
-                    <td>
-                        <div class="btn-group btn-group-sm" role="group">
+                    <td class="action-btn">
+                        <div class="" role="group">
                             {% if file.status != 1 %}
+                                <a href="{{ url_for('file.change_status', ID=file.id) }}" type="button"
+                                   style="{% if file.status != -1 %}display: none{% endif %} "
+                                   class="btn btn-warning btn-sm btn_start">
+                                    <i class="fas fa-clock"></i> Start
+                                </a>
 
-                                {% if file.status == -1 %}
-                                    <a href="{{ url_for('file.change_status', ID=file.id) }}" type="button"
-                                       class="btn btn-warning btn-sm"><i class="fas fa-clock"></i> Start
-                                    </a>
-                                {% elif file.status == 0 %}
-                                    <a href="{{ url_for('file.explore_file', identifier=file['id']) }}" type="button"
-                                       class="btn btn-primary btn-sm"><i class="fas fa-expand-arrows-alt"></i> Exp</a>
-                                    {#<a href="{{ url_for('file.change_status', ID=file.id) }}" type="button"
-                                       class="btn btn-primary"><i class="fas fa-check-circle"></i>
-                                        Done
-                                    </a>#}
-                                {% endif %}
-
+                                <a href="{{ url_for('file.explore_file', identifier=file['id']) }}" type="button"
+                                   style="{% if file['status'] != 0 %}display:none{% endif %}"
+                                   class="btn btn-primary btn-sm btn_exp">
+                                    <i class="fas fa-expand-arrows-alt"></i> Exp</a>
                             {% endif %}
                         </div>
                     </td>
@@ -85,4 +82,41 @@
             </tbody>
         </table>
     </section>
+{% endblock %}
+{% block footer %}
+
+    <script>
+        function change_state(id, from, to, user) {
+            let row = $('tr[data-id="' + id + '"]:first')
+            let title = "new file"
+            if (row.length && parseInt($(row).data('status')) !== to) {
+                let status_badge = $(row).find('.status-badge')
+                let action_btns = $(row).find('.action-btn')
+                title = $(row).find('td[data-title]').html()
+                if (to === -1) {
+                    $(status_badge).html('<span class="badge bg-warning rounded-pill">Undone</span>')
+                    $(action_btns).find('.btn_start').show(300)
+                    $(action_btns).find('.btn_exp').hide(300)
+                } else if (to === 0) {
+                    $(status_badge).html('<span class="badge bg-primary rounded-pill">Ongoing</span>')
+                    $(action_btns).find('.btn_start').hide(300)
+                    $(action_btns).find('.btn_exp').show(300)
+                } else if (to === 1) {
+                    $(status_badge).html('<span class="badge bg-success rounded-pill">Complete</span>')
+                }
+            }
+            $.toast({
+                heading: "Information",
+                text: `${user} starting working on ${title}`,
+                icon: 'info'
+            })
+        }
+
+        socket.on('file_status_updated', function (data) {
+            console.log("File status changed", data)
+            change_state(data['file_id'], data['from'], data['to'], data['user'])
+        })
+
+        {#socket.emit('state_change', {data: 'I\'m connected!'});#}
+    </script>
 {% endblock %}

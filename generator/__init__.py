@@ -1,5 +1,10 @@
 from flask import Flask, redirect, url_for
 import os
+from flask_socketio import SocketIO
+import eventlet
+eventlet.monkey_patch()
+
+socketio = SocketIO()
 
 
 def create_app(environ=None, start_response=None, test_config=None):
@@ -43,5 +48,7 @@ def create_app(environ=None, start_response=None, test_config=None):
 
     from . import user
     app.register_blueprint(user.bp)
+
+    socketio.init_app(app)
 
     return app

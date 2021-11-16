@@ -3,6 +3,7 @@ import os
 import shutil
 from datetime import datetime as dt
 
+from . import socketio
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, current_app, send_from_directory, send_file
 )
@@ -125,7 +126,15 @@ def update_file_status(ID, status=None):
         (g.user['id'], ID, current_status, status)
     )
     db.commit()
+    socketio.emit('file_status_updated',
+                  {"file_id": ID, "user": g.user['username'], "to": status, "from": current_status,
+                   "statuses": current_app.config['FILE_STATUSES']})
     flash("Status updated successfully.", 'success')
+
+
+# @socketio.on('state_change')
+# def status_change(data):
+#     print(data)
 
 
 @bp.route('/status/<int:ID>')
