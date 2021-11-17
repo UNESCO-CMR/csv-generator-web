@@ -132,6 +132,7 @@ def update_file_status(ID, status=None):
     socketio.emit('file_status_updated',
                   {"file_id": ID, "user": g.user['username'], "to": status, "from": current_status,
                    "statuses": current_app.config['FILE_STATUSES']})
+    socketio.emit('statistics_updated')
     flash("Status updated successfully.", 'success')
 
 

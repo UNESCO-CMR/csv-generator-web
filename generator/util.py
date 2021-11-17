@@ -41,8 +41,8 @@ def compose_username(f_name, l_name, etablissment, u_names):
     l_name = re.sub("[',\"]", '', l_name.lower())
     etablissment = re.sub("[',\"]", '', etablissment.lower())
     gen = unidecode("{}_{}".format(
-        f_name.split()[0].replace('-', '_'),
-        "_".join(etablissment.split()[0:2]).replace('-', '_').replace('.', '_')
+        f_name.split()[0].replace('-', '_').replace('.', '_').replace("'", ''),
+        "_".join(etablissment.split()[0:2]).replace('-', '_').replace('.', '_').replace("'", '')
     ))
     copy = gen
     counter = 1
