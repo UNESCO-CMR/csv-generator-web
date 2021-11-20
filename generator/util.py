@@ -1,7 +1,10 @@
 import csv
+import json
 import random
 import re
 import os
+from json import JSONDecodeError
+
 from flask import current_app
 
 import chardet
@@ -68,9 +71,65 @@ def rand_str(count, allowed=None):
     return ''.join(random.choice(allowed) for x in range(count))
 
 
+def _write_cache_usernames(data, path, generated_path=None, replace=False):
+    if not os.path.isfile(path):
+        with open(path, "w") as fh:
+            json.dump([], fh)
+    with open(path, "r+") as fh:
+        if replace:
+            u_names = []
+        else:
+            try:
+                u_names = json.load(fh)
+            except JSONDecodeError as e:
+                print("[ERROR] Can't load json cache: ", str(e))
+                u_names = []
+        # If statement may be unnecessary
+        # if type(u_names) is not list:
+        #     u_names = []
+        if len(u_names) == 0 and generated_path is not None:
+            u_names = load_usernames(generated_path)
+        if type(data) is list:
+            u_names += data
+    with open(path, "w") as fhm:
+        data = list(set(u_names))
+        json.dump(data, fhm)
+        return
+
+
+def _read_cache_usernames(path, generated_path=None):
+    if not os.path.isfile(path):
+        _write_cache_usernames([], path, generated_path)
+    with open(path, "r") as fh:
+        u_names = json.load(fh)
+    return u_names
+
+
+def _load_field_from_excel_file(path, field='username'):
+    # Check file existance
+    wb = load_workbook(path)
+    usernames = []
+    for sheet_name in wb.sheetnames:
+        ws = wb[sheet_name]
+        labels = [[field.value.lower() for field in row if field.value] for row in ws.iter_rows(max_row=1)][0]
+        field_col = labels.index(field) + 1
+        current_row = 1
+        for row in ws.iter_rows():
+            col = 1
+            for cell in row:
+                if cell.value in labels:
+                    continue
+                if col == field_col:
+                    usernames.append(ws.cell(row=current_row, column=field_col).value)
+                col += 1
+            current_row += 1
+    return usernames
+
+
 def load_usernames(path):
     """
     @todo Load usernames from local cache file (if necessary)
+    :param cache_path: @new Path to username cache file
     :param path: Path to root folder containing sub folders
     :return: List already used usernames (from final spreadsheets)
     """
@@ -80,24 +139,11 @@ def load_usernames(path):
     head, _ = os.path.split(path)
     files = glob.glob(
         os.path.join(current_app.config['UPLOAD_FOLDER'], "*/{}/*.xlsx".format(current_app.config['GENERATED_DIR'])))
-    logging.info("Loading used usernames...")
-    for final in files:
-        wb = load_workbook(final)
-        for sheet_name in wb.sheetnames:
-            ws = wb[sheet_name]
-            labels = [[field.value.lower() for field in row if field.value] for row in ws.iter_rows(max_row=1)][0]
-            USERNAME_COL = labels.index('username') + 1
-            current_row = 1
-            for row in ws.iter_rows():
-                col = 1
-                for cell in row:
-                    if cell.value in labels:
-                        continue
-                    if col == USERNAME_COL:
-                        usernames.append(ws.cell(row=current_row, column=USERNAME_COL).value)
-                    col += 1
-                current_row += 1
 
+    logging.info("Loading used usernames...")
+    for file in files:
+        pulled = _load_field_from_excel_file(file)
+        usernames += pulled
     return usernames
 
 
@@ -112,8 +158,11 @@ def main(config=None):
         log_file = open(config['LOG_FILE'], "w")
         sys.stdout = log_file
         wb = load_workbook(config['FILENAME'])
-        usernames = load_usernames(config['SAVE_PATH'])
+        # usernames = load_usernames(config['SAVE_PATH'])
+        usernames = _read_cache_usernames(config['USERNAME_CACHE_FILE'], config['SAVE_PATH'])
         pltform = config['PLATFORM']
+
+        sheets_usernames = []
 
         for sheet_name in wb.sheetnames:
             ws = wb[sheet_name]
@@ -175,7 +224,10 @@ def main(config=None):
                             username = compose_username(first_name, last_name, etabliss, usernames)
 
                             usernames.append(username)
+                            sheets_usernames.append(username)
+                            # Write cell
                             ws.cell(row=cell.row, column=cell.column, value=username)
+                        # Count genders
                         gender = ws.cell(row=current_row, column=GENDER_COL).value
                         if len(gender):
                             gen_index = "males" if gender.lower().startswith("m") else "females"
@@ -193,11 +245,11 @@ def main(config=None):
                 print('Endcoding: ' + str(get_file_encoding(CSV)))
                 print('Endcoding with chardet: ' + str(get_file_encoding_chardet(CSV)))
         wb.save("{}/{}.xlsx".format(config['SAVE_PATH'], 'final'))
-
+        _write_cache_usernames(sheets_usernames, config['USERNAME_CACHE_FILE'], config['SAVE_PATH'])
         print("ALL DONE!!!")
 
     except Exception as e:
-        print(str(e))
+        print(str(e), type(e))
     finally:
         if log_file is not None:
             log_file.close()

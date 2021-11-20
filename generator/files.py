@@ -1,6 +1,7 @@
 import ntpath
 import os
 import shutil
+import threading
 from datetime import datetime as dt
 
 from . import socketio
@@ -17,10 +18,12 @@ from generator.auth import auth, redirect_back
 from generator.db import get_db
 from generator.region import get_region_by_id
 from generator.user import get_user_by_id
-from generator.util import main as gen_master
+from generator.util import main as gen_master, _read_cache_usernames, _write_cache_usernames, \
+    _load_field_from_excel_file
 
 bp = Blueprint('file', __name__, url_prefix='/files')
-ALLOWED_EXTENSIONS = {'xlsx', 'xlsm', 'xlsb', 'xltx', 'xltm', 'xlt', 'xls', 'xml', 'xml', 'xlam', 'xla', 'xlw', 'xlr'}
+ALLOWED_EXTENSIONS = {'xlsx', 'xlsm', 'xlsb', 'xltx', 'xltm', 'xlt', 'xls', 'xml', 'xml', 'xlam', 'xla', 'xlw', 'xlr',
+                      'docx'}
 
 
 @bp.route('/<string:name>')
@@ -145,7 +148,7 @@ def update_file_status(ID, status=None):
 def change_status(ID):
     update_file_status(ID)
 
-    return redirect(redirect_back())
+    return redirect(url_for('file.explore_file', identifier=ID))
 
 
 @bp.route('/remove/<int:ID>')
@@ -158,6 +161,18 @@ def remove_cleaned_file(ID):
     gen_path = os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned_file['path'],
                             current_app.config['GENERATED_DIR'])
     if os.path.isdir(gen_path):
+        # Remove usernames from cache #
+        generated_final_file = os.path.join(current_app.config['UPLOAD_FOLDER'],
+                                            "{}/{}/{}".format(cleaned_file['path'],
+                                                              current_app.config['GENERATED_DIR'],
+                                                              current_app.config['GENERATED_FINAL_FILE']))
+        if os.path.isfile(generated_final_file):
+            cleaned_file_usernames = _load_field_from_excel_file(generated_final_file)
+            cache = _read_cache_usernames(current_app.config['USERNAME_CACHE_FILE'])
+            u_names = list(set(cache) - set(cleaned_file_usernames))
+            _write_cache_usernames(u_names, current_app.config['USERNAME_CACHE_FILE'], replace=True)
+
+        # Remove generated CSV files tree
         shutil.rmtree(gen_path)
     db = get_db()
     db.execute(
@@ -281,11 +296,70 @@ def add_cleaned_file(file_id):
             return redirect(url_for('file.change_status', ID=file['id']))
 
     flash(error, "warning")
-    return redirect(url_for('file.explore_file', title=file['title']))
+    return redirect(url_for('file.explore_file', identifier=file['id']))
 
 
 @bp.route('/generate-csv/<int:cleaned_id>')
 def generate_csv(cleaned_id):
+    cleaned = get_cleaned_file_by_id(cleaned_id)
+    save_dir = current_app.config['GENERATED_DIR']
+    save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned['path'], save_dir)
+
+    # Attempt to remove previous generation if it exists
+    gen_path = os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned['path'],
+                            current_app.config['GENERATED_DIR'])
+    if os.path.isdir(gen_path):
+        # Remove usernames from cache #
+        generated_final_file = os.path.join(current_app.config['UPLOAD_FOLDER'],
+                                            "{}/{}/{}".format(cleaned['path'],
+                                                              current_app.config['GENERATED_DIR'],
+                                                              current_app.config['GENERATED_FINAL_FILE']))
+        if os.path.isfile(generated_final_file):
+            cleaned_file_usernames = _load_field_from_excel_file(generated_final_file)
+            cache = _read_cache_usernames(current_app.config['USERNAME_CACHE_FILE'])
+            u_names = list(set(cache) - set(cleaned_file_usernames))
+            _write_cache_usernames(u_names, current_app.config['USERNAME_CACHE_FILE'], replace=True)
+
+        # Remove generated CSV files tree
+        shutil.rmtree(gen_path)
+
+    try:
+        os.makedirs(save_path)
+    except OSError:
+        pass
+
+    config = {
+        'FILENAME': os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned['path'], cleaned['filename']),
+        'SAVE_PATH': save_path,
+        'UPDATE_USERNAME': True,
+        'UPDATE_NAMES': True,
+        'UPDATE_PASSWORD': True,
+        'EXPORT_CSV': True,
+        'CSV_DELIMITER': ";",
+        'PASSWORD_LENGTH': 1,
+        'LOG_FILE': os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned['path'],
+                                 current_app.config['LOG_FILENAME']),
+        'PLATFORM': cleaned['platform'],
+        'USERNAME_CACHE_FILE': current_app.config['USERNAME_CACHE_FILE']
+    }
+    stats = gen_master(config)
+    if "male" in stats or "females" in stats:
+        db = get_db()
+        db.execute(
+            "UPDATE cleaned_files SET males = ?, females = ? WHERE id = ?",
+            (stats['males'], stats['females'], cleaned_id)
+        )
+        db.commit()
+
+    with open(config['LOG_FILE'], 'r') as f:
+        log = f.readlines()
+
+    flash("***".join(log), "info")
+    return redirect(redirect_back())
+
+
+# @unused
+def generate_csv_deamon(cleaned_id):
     cleaned = get_cleaned_file_by_id(cleaned_id)
     save_dir = current_app.config['GENERATED_DIR']
     save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned['path'], save_dir)
@@ -306,11 +380,10 @@ def generate_csv(cleaned_id):
         'PASSWORD_LENGTH': 1,
         'LOG_FILE': os.path.join(current_app.config['UPLOAD_FOLDER'], cleaned['path'],
                                  current_app.config['LOG_FILENAME']),
-        'PLATFORM': cleaned['platform']
+        'PLATFORM': cleaned['platform'],
+        'USERNAME_CACHE_FILE': current_app.config['USERNAME_CACHE_FILE']
     }
-    print(config['FILENAME'])
     stats = gen_master(config)
-    print(stats)
     db = get_db()
     db.execute(
         "UPDATE cleaned_files SET males = ?, females = ? WHERE id = ?", (stats['males'], stats['females'], cleaned_id)
@@ -321,7 +394,6 @@ def generate_csv(cleaned_id):
         log = f.readlines()
 
     flash("***".join(log), "info")
-    return redirect(redirect_back())
 
 
 def get_file_by_id(ID):

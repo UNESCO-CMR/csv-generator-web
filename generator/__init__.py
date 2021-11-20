@@ -14,9 +14,11 @@ def create_app(environ=None, start_response=None, test_config=None):
         DATABASE=os.path.join(app.instance_path, 'generator.sqlite'),
         UPLOAD_FOLDER=os.path.join(app.instance_path, 'uploads'),
         GENERATED_DIR='generated',
+        GENERATED_FINAL_FILE='final.xlsx',
         LOG_FILENAME='output.log',
         FILE_STATUSES={'Undone': -1, 'Ongoing': 0, 'Done': 1},
-        PLATFORMS={'MY_SCHOOL_ONLINE': "MY SCHOOL ONLINE", 'MON_ECOLE_ENLIGNE': "MON ECOLE ENLIGNE"}
+        PLATFORMS={'MY_SCHOOL_ONLINE': "MY SCHOOL ONLINE", 'MON_ECOLE_ENLIGNE': "MON ECOLE ENLIGNE"},
+        USERNAME_CACHE_FILE=os.path.join(app.instance_path, 'DATA_CACHE.TXT')
     )
 
     if test_config is None:

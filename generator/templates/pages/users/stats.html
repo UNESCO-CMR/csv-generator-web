@@ -26,18 +26,24 @@
                 <tr>
                     <td class="text-center">{{ loop.index }}</td>
                     <td class="text-center">{{ user.username }}</td>
-                    <td>{{ user.total }}</td>
-                    <td>{{ user.females }}</td>
-                    <td>{{ user.males }}</td>
+                    <td>{{ "{:,}".format(user.total) }}</td>
+                    <td>{{ "{:,}".format(user.females) }}</td>
+                    <td>{{ "{:,}".format(user.males) }}</td>
                 </tr>
             {% endfor %}
+            <tr>
+                <th colspan="2" class="text-center">TOTALS</th>
+                <th rowspan="">{{ "{:,}".format(users | sum(attribute='total')) }}</th>
+                <th rowspan="">{{ "{:,}".format(users | sum(attribute='females')) }}</th>
+                <th rowspan="">{{ "{:,}".format(users | sum(attribute='males')) }}</th>
+            </tr>
             </tbody>
         </table>
     </section>
     <section class="container pb-5 mb-5">
         <div class="row">
             <div class="col"></div>
-            <div class="col">
+            <div class="col-6">
                 <canvas id="myChart" width="400" height="400"></canvas>
             </div>
             <div class="col"></div>
@@ -64,7 +70,11 @@
                         'rgba(255, 206, 86, 0.2)',
                         'rgba(75, 192, 192, 0.2)',
                         'rgba(153, 102, 255, 0.2)',
-                        'rgba(255, 159, 64, 0.2)'
+                        'rgba(255, 159, 64, 0.2)',
+                        'rgb(105,255,64, 0.2)',
+                        'rgb(62,130,255, 0.2)',
+                        'rgb(182,20,154, 0.2)',
+                        'rgb(13,222,149, 0.2)'
                     ],
                     borderColor: [
                         'rgba(255, 99, 132, 1)',
@@ -72,7 +82,11 @@
                         'rgba(255, 206, 86, 1)',
                         'rgba(75, 192, 192, 1)',
                         'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
+                        'rgba(255, 159, 64, 1)',
+                        'rgb(105,255,64, 1)',
+                        'rgb(62,130,255, 1)',
+                        'rgb(182,20,154, 1)',
+                        'rgb(13,222,149, 1)'
                     ],
                     borderWidth: 4
                 }]
@@ -88,11 +102,13 @@
                 },
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
                     }
                 }
             }
         });
-        socket.on('statistics_updated', window.location.reload)
+        socket.on('statistics_updated', function () {
+            window.location.reload()
+        })
     </script>
 {% endblock %}
